@@ -43,6 +43,11 @@ class Worker extends Command
             return 1;
         }
 
+        // todo make timeouts configurable?
+        $connectionTimeout = 300;
+        $requestTimeout = 300;
+        $scriptTimeout = 120;
+
         try {
             $driver = \RemoteWebDriver::create(
                 'https://' . $options['username'] . ':' . $options['key'] . '@hub-cloud.browserstack.com/wd/hub',
@@ -58,12 +63,11 @@ class Worker extends Command
                     'browserstack.debug' => true,
                     'browserstack.local' => true
                 ],
-
-                // todo make timeouts configurable?
-                300000,
-                300000
+                $connectionTimeout,
+                $requestTimeout
             );
 
+            $driver->manage()->timeouts()->setScriptTimeout($scriptTimeout);
             $driver->get('http://localhost:4000' . $options['entry'] . '?_s=' . $driver->getSessionID());
 
             // wait until the report is available, then take a screen shot
