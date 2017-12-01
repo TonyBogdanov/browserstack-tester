@@ -1,0 +1,22 @@
+{
+    "name": "tonybogdanov/browserstack-tester",
+    "authors": [
+        {
+            "name": "Tony Bogdanov",
+            "email": "support@tonybogdanov.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "symfony/process": "^4.1@dev",
+        "react/http": "dev-master",
+        "facebook/webdriver": "dev-master",
+        "symfony/console": "^4.1@dev",
+        "guzzlehttp/guzzle": "^6.2@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "BST\\": "classes/"
+        }
+    }
+}
