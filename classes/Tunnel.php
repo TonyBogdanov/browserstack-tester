@@ -2,7 +2,7 @@
 
 namespace BST;
 
-use Guzzle\Http\Client;
+use GuzzleHttp\Client;
 
 class Tunnel
 {
@@ -98,9 +98,9 @@ class Tunnel
         }
 
         $client = new Client();
-        $response = $client->get($url)->send();
+        $response = $client->get($url);
 
-        return file_put_contents($path, $response->getBody(true));
+        return file_put_contents($path, (string) $response->getBody());
     }
 
     /**
