@@ -68,10 +68,10 @@ class Bootstrap
     }
 
     /**
-     * @return Bootstrap
+     * @return array
      * @throws \Exception
      */
-    public function run(): Bootstrap
+    public function run(): array
     {
         if (!$this->bootstrapped) {
             throw new \Exception('Cannot run a non-bootstrapped configuration');
@@ -82,7 +82,7 @@ class Bootstrap
 
         $browserCount = count($this->getConfig()->getBrowsers());
         $build = $this->getConfig()->getProject() . ': ' . date('H:i:s - d.m.Y');
-        $buildFailed = false;
+        $buildFailures = [];
 
         $tunnel = new Tunnel($this->getLogger(), $this->getApi()->getKey());
 
@@ -102,14 +102,13 @@ class Bootstrap
                     'WebServer stopped [' . $code . ']: ' . $text,
                     0 === $code ? 'green' : 'red'
                 );
-            })->on(ProcessWorker::EVENT_OUTPUT, function (string $output) use (&$buildFailed) {
+            })->on(ProcessWorker::EVENT_OUTPUT, function (string $output) use (&$buildFailures) {
                 $report = json_decode($output, true);
                 if (!is_array($report)) {
                     throw new \Exception('Report is not a valid JSON: ' . $output);
                 }
 
-                $failures = json_decode($report['failures']);
-                $failures = $failures ?: [];
+                $failures = $report['failures'] ?: [];
                 $status = empty($failures);
 
                 $this->getLogger()->log(
@@ -118,7 +117,7 @@ class Bootstrap
                 )->log('Updating worker session');
 
                 if (!$status) {
-                    $buildFailed = true;
+                    $buildFailures = array_merge($buildFailures, $failures);
                 }
 
                 $this->getApi()->notify($report['session'], $status, implode(PHP_EOL, $failures));
@@ -191,13 +190,9 @@ class Bootstrap
         $this->getLogger()->log('BST work finished');
 
         $this->getLogger()->dec();
-        $this->getLogger()->log('Terminating, build ' . ($buildFailed ? 'failed' : 'succeeded'));
+        $this->getLogger()->log('Terminating');
 
-        if ($buildFailed) {
-            throw new \Exception('Test suite failed');
-        }
-
-        return $this;
+        return $buildFailures;
     }
 
     /**

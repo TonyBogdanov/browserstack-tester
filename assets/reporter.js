@@ -18,22 +18,45 @@ window.addEventListener('DOMContentLoaded', function () {
         var failures = [];
 
         runner.on('fail', function(test, e) {
-            failures.push(test.fullTitle() + ' // [' + e.name + '] ' + e.message);
+            failures.push(test.fullTitle() + ' :: [' + e.name + '] ' + e.message);
         });
 
         runner.on('end', function() {
-            var session = document.location.search.match(/_s=([a-f0-9]+)/);
-            if (!session) {
+            var _s = document.location.search.match(/_s=([a-f0-9]+)/);
+            if (!_s) {
                 bstError('Missing session identifier');
             }
 
-            var frame = document.createElement('iframe');
+            var frame = document.createElement('frame'),
+                form = document.createElement('form'),
+                session = document.createElement('input');
 
-            frame.style.display = 'none';
-            frame.src = '/_report?session=' + encodeURIComponent(session[1]) + '&failures=' +
-                encodeURIComponent(JSON.stringify(failures));
+            frame.src = 'about:blank';
+            frame.name = 'bstreport';
 
+            form.action = '/_report';
+            form.method = 'POST';
+            form.target = 'bstreport';
+
+            session.type = 'hidden';
+            session.name = 'session';
+            session.value = _s[1];
+
+            for (var i = 0; i < failures.length; i++) {
+                var e = document.createElement('input');
+
+                e.type = 'hidden';
+                e.name = 'failures[]';
+                e.value = failures[i];
+
+                form.appendChild(e);
+            }
+
+            form.appendChild(session);
+            document.body.appendChild(form);
             document.body.appendChild(frame);
+
+            form.submit();
         });
     }
 

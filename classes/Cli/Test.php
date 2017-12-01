@@ -40,14 +40,24 @@ class Test extends Command
             $bootstrap = new Bootstrap($io, $configPath);
             $bootstrap->bootstrap();
 
-            if (!$bootstrap->run()) {
-                throw new \Exception('Test suite failed');
+            $failures = $bootstrap->run();
+
+            if (!empty($failures)) {
+                $i = 1;
+
+                $io->error('Test suite failed' . PHP_EOL . implode(PHP_EOL, array_map(function (string $message)
+                    use (&$i) {
+                        return $i++ . '. ' . $message;
+                    }, $failures)));
+
+                return 1;
             }
         } catch (\Exception $e) {
             $io->error($e->getMessage());
             return 1;
         }
 
+        $io->success('Test suite succeeded');
         return 0;
     }
 }

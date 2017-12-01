@@ -4,6 +4,9 @@ namespace BST;
 
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory;
+use React\Http\Middleware\RequestBodyBufferMiddleware;
+use React\Http\Middleware\RequestBodyParserMiddleware;
+use React\Http\MiddlewareRunner;
 use React\Http\Response;
 use React\Http\StreamingServer;
 use React\Socket\Server;
@@ -1158,7 +1161,11 @@ class WebServer extends StreamingServer
      */
     public function __construct(string $btsRoot, string $root = null)
     {
-        parent::__construct($this);
+        parent::__construct(new MiddlewareRunner([
+            new RequestBodyBufferMiddleware(16777216),
+            new RequestBodyParserMiddleware(),
+            $this
+        ]));
 
         $this->btsRoot = $btsRoot;
         $this->root = isset($root) ? $root : getcwd();
@@ -1177,10 +1184,11 @@ class WebServer extends StreamingServer
                 return $this->sendFile($this->btsRoot . '/assets/reporter.min.js');
 
             case '/_report' === $path:
-                $this->result[] = $request->getQueryParams();
+                $this->result[] = $request->getParsedBody();
                 return $this->sendContent(
-                    'text/plain',
-                    'OK'
+                    'text/html',
+                    '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>OK</title></head>' .
+                    '<body>OK</body></html>'
                 );
 
             case 'html' === strtolower(pathinfo($path, PATHINFO_EXTENSION)):
