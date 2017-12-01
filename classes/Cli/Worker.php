@@ -63,8 +63,8 @@ class Worker extends Command
                     'browserstack.debug' => true,
                     'browserstack.local' => true
                 ],
-                $connectionTimeout,
-                $requestTimeout
+                $connectionTimeout * 1000,
+                $requestTimeout * 1000
             );
 
             $driver->manage()->timeouts()->setScriptTimeout($scriptTimeout);
