@@ -100,7 +100,15 @@ class Tunnel
         $client = new Client();
         $response = $client->get($url);
 
-        return file_put_contents($path, (string) $response->getBody());
+        if (!file_put_contents($path, (string) $response->getBody())) {
+            return false;
+        }
+
+        if (!chmod($path, 0777)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
