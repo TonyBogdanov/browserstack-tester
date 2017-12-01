@@ -108,7 +108,7 @@ class Bootstrap
                     throw new \Exception('Report is not a valid JSON: ' . $output);
                 }
 
-                $failures = $report['failures'] ?: [];
+                $failures = isset($report['failures']) && !empty($report['failures']) ? $report['failures'] : [];
                 $status = empty($failures);
 
                 $this->getLogger()->log(
