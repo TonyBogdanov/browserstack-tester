@@ -65,7 +65,11 @@ class Worker extends Command
             );
 
             $driver->get('http://localhost:4000' . $options['entry'] . '?_s=' . $driver->getSessionID());
+
+            // wait until the report is available, then take a screen shot
+            $driver->executeAsyncScript(file_get_contents(__DIR__ . '/../../assets/webdriver-blocker.min.js'));
             $driver->takeScreenshot();
+
             $driver->quit();
         } catch (\Exception $e) {
             $io->error($e->getMessage());

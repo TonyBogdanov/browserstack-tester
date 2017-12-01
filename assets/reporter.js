@@ -57,6 +57,11 @@ window.addEventListener('DOMContentLoaded', function () {
             document.body.appendChild(frame);
 
             form.submit();
+
+            document.body.dataset.bstReportReady = true;
+            var event = document.createEvent('Event');
+            event.initEvent('bst-report-ready', true, true);
+            document.body.dispatchEvent(event);
         });
     }
 
