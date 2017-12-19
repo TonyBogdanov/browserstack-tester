@@ -2,6 +2,7 @@
 
 namespace BST\Cli;
 
+use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -49,7 +50,7 @@ class Worker extends Command
         $scriptTimeout = 120;
 
         try {
-            $driver = \RemoteWebDriver::create(
+            $driver = RemoteWebDriver::create(
                 'https://' . $options['username'] . ':' . $options['key'] . '@hub-cloud.browserstack.com/wd/hub',
                 [
                     'build' => $options['build'],
