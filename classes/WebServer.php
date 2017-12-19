@@ -11,7 +11,7 @@ use React\Http\Response;
 use React\Http\StreamingServer;
 use React\Socket\Server;
 
-class WebServer extends StreamingServer
+class WebServer
 {
     const PORT = 4000;
 
@@ -1091,6 +1091,11 @@ class WebServer extends StreamingServer
     ];
 
     /**
+     * @var StreamingServer
+     */
+    protected $server;
+
+    /**
      * @var string
      */
     protected $btsRoot;
@@ -1161,11 +1166,11 @@ class WebServer extends StreamingServer
      */
     public function __construct(string $btsRoot, string $root = null)
     {
-        parent::__construct(new MiddlewareRunner([
+        $this->server = new StreamingServer([
             new RequestBodyBufferMiddleware(16777216),
             new RequestBodyParserMiddleware(),
             $this
-        ]));
+        ]);
 
         $this->btsRoot = $btsRoot;
         $this->root = isset($root) ? $root : getcwd();
@@ -1213,7 +1218,7 @@ class WebServer extends StreamingServer
         $loop = Factory::create();
 
         $socket = new Server(self::PORT, $loop);
-        $this->listen($socket);
+        $this->server->listen($socket);
 
         $loop->addPeriodicTimer(0.01, function () use ($loop, $stopped) {
             if (0 < count($this->result)) {
