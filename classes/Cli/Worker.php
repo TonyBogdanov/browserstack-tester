@@ -73,10 +73,12 @@ class Worker extends Command
             );
 
             // set timeouts
-            $driver->manage()->timeouts()
-                ->setScriptTimeout($scriptTimeout)
-                ->implicitlyWait($pageTimeout)
-                ->pageLoadTimeout($pageTimeout);
+            try {
+                $driver->manage()->timeouts()
+                    ->setScriptTimeout($scriptTimeout)
+                    ->implicitlyWait($pageTimeout)
+                    ->pageLoadTimeout($pageTimeout);
+            } catch (\Exception $e) {}
 
             // try to load in sequence
             $session = $driver->getSessionID();
