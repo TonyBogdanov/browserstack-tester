@@ -116,6 +116,7 @@ class Tunnel
      *
      * @param Logger $logger
      * @param string $key
+     * @throws \Exception
      */
     public function __construct(Logger $logger, string $key)
     {
@@ -158,7 +159,6 @@ class Tunnel
     public function stop(): Tunnel
     {
         $this->getProcess()->stop();
-
         return $this;
     }
 

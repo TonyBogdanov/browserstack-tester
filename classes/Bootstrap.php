@@ -4,6 +4,7 @@ namespace BST;
 
 use BST\Cli\Server;
 use BST\Cli\Worker;
+use GuzzleHttp\Client;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class Bootstrap
@@ -29,6 +30,11 @@ class Bootstrap
     protected $api;
 
     /**
+     * @var string
+     */
+    protected $ip;
+
+    /**
      * @var bool
      */
     protected $bootstrapped = false;
@@ -38,6 +44,7 @@ class Bootstrap
      *
      * @param SymfonyStyle $io
      * @param string $configPath
+     * @throws \Exception
      */
     public function __construct(SymfonyStyle $io, string $configPath)
     {
@@ -48,6 +55,7 @@ class Bootstrap
 
     /**
      * @return Bootstrap
+     * @throws \Exception
      */
     public function bootstrap(): Bootstrap
     {
@@ -56,6 +64,24 @@ class Bootstrap
         $this->getLogger()->log('Loading config file: ' . $this->getConfigPath())->inc();
         $this->setConfig(Config::fromFile($this->getConfigPath()));
         $this->getLogger()->dec();
+
+        $this->getLogger()->log('Detecting public IP')->inc();
+
+        try {
+            $ip = @json_decode((new Client([
+                'timeout' => 5
+            ]))->get('https://api.ipify.org?format=json')->getBody(), true);
+
+            if (!is_array($ip) || !isset($ip['ip'])) {
+                throw new \Exception('');
+            }
+
+            $this->setIp($ip['ip']);
+        } catch (\Exception $e) {
+            throw new \Exception('Cannot determine public IP address of the current machine');
+        }
+
+        $this->getLogger()->log('Detected as: ' . $this->getIp())->dec();
 
         $this->getLogger()->log('Bootstrapping APIs')->inc();
         $this->getApi()->bootstrap();
@@ -96,7 +122,7 @@ class Bootstrap
         $server
             ->getEmitter()
             ->on(ProcessWorker::EVENT_START, function () {
-                $this->getLogger()->log('WebServer running on localhost:' . WebServer::PORT);
+                $this->getLogger()->log('WebServer running on port: ' . WebServer::PORT);
             })->on(ProcessWorker::EVENT_STOP, function (int $code, string $text) {
                 $this->getLogger()->log(
                     'WebServer stopped [' . $code . ']: ' . $text,
@@ -145,7 +171,8 @@ class Bootstrap
                     'device' => $browser->getDevice(),
                     'real_mobile' => $browser->getRealMobile(),
                     'build' => $build,
-                    'entry' => $this->getConfig()->getEntry()
+                    'entry' => $this->getConfig()->getEntry(),
+                    'ip' => $this->getIp()
                 ]))
             ))->getEmitter()
                 ->on(ProcessWorker::EVENT_START, function () use ($index) {
@@ -264,6 +291,24 @@ class Bootstrap
     public function setApi(API $api): Bootstrap
     {
         $this->api = $api;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIp(): string
+    {
+        return $this->ip;
+    }
+
+    /**
+     * @param string $ip
+     * @return Bootstrap
+     */
+    public function setIp(string $ip): Bootstrap
+    {
+        $this->ip = $ip;
         return $this;
     }
 }

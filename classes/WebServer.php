@@ -6,7 +6,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory;
 use React\Http\Middleware\RequestBodyBufferMiddleware;
 use React\Http\Middleware\RequestBodyParserMiddleware;
-use React\Http\MiddlewareRunner;
 use React\Http\Response;
 use React\Http\StreamingServer;
 use React\Socket\Server;
@@ -1200,7 +1199,7 @@ class WebServer
                 return $this->sendFile($this->root . $path, function ($content) {
                     return preg_replace(
                         '/<head([^>]*)>/i',
-                        '<head$1>' . PHP_EOL . '    <script src="/_reporter.js"></script>' . PHP_EOL,
+                        '<head$1>' . PHP_EOL . '    <script id="bst_reporter" src="/_reporter.js"></script>' . PHP_EOL,
                         $content
                     );
                 });

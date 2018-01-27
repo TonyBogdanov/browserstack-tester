@@ -2,7 +2,10 @@
 
 namespace BST\Cli;
 
+use BST\WebServer;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Facebook\WebDriver\WebDriverBy;
+use Facebook\WebDriver\WebDriverExpectedCondition;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -48,6 +51,7 @@ class Worker extends Command
         $connectionTimeout = 300;
         $requestTimeout = 300;
         $scriptTimeout = 120;
+        $pageTimeout = 30;
 
         try {
             $driver = RemoteWebDriver::create(
@@ -68,13 +72,45 @@ class Worker extends Command
                 $requestTimeout * 1000
             );
 
-            $driver->manage()->timeouts()->setScriptTimeout($scriptTimeout);
-            $driver->get('http://localhost:4000' . $options['entry'] . '?_s=' . $driver->getSessionID());
+            // set timeouts
+            $driver->manage()->timeouts()
+                ->setScriptTimeout($scriptTimeout)
+                ->implicitlyWait($pageTimeout)
+                ->pageLoadTimeout($pageTimeout);
 
-            // wait until the report is available, then take a screen shot
-            $driver->executeAsyncScript(file_get_contents(__DIR__ . '/../../assets/webdriver-blocker.min.js'));
+            // try to load in sequence
+            $session = $driver->getSessionID();
+            $addresses = [
+                'localhost',
+                '127.0.0.1',
+                $options['ip']
+            ];
+            $prefix = 'http://';
+            $suffix = ':' . WebServer::PORT . $options['entry'] . '?_s=' . $session;
+
+            for ($i = 0, $count = count($addresses);; $i++) {
+                // end of address list reached?
+                if ($i >= $count) {
+                    throw new \Exception('Unable to load test suite, tried with ' . implode(', ', $addresses));
+                }
+
+                // request page load
+                $driver->get($prefix . $addresses[$i] . $suffix);
+
+                // wait for page load indicated by the presence of a #bst_reporter element
+                // if page load times out, or an error page is loaded, continue with the next address
+                try {
+                    $driver->wait($pageTimeout)->until(WebDriverExpectedCondition::presenceOfElementLocated(
+                        WebDriverBy::id('bst_reporter')
+                    ));
+
+                    // page is loaded successfully, trigger the reporter and finish up
+                    $driver->executeAsyncScript(file_get_contents(__DIR__ . '/../../assets/webdriver-blocker.min.js'));
+                    break;
+                } catch (\Exception $e) {}
+            }
+
             $driver->takeScreenshot();
-
             $driver->quit();
         } catch (\Exception $e) {
             $io->error($e->getMessage());
