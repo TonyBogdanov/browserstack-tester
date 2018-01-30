@@ -83,6 +83,7 @@ class Worker extends Command
             // try to load in sequence
             $session = $driver->getSessionID();
             $addresses = [
+                'bs-local.com',
                 'localhost',
                 '127.0.0.1',
                 $options['ip']
