@@ -166,8 +166,7 @@ class API
             return 0;
         }
 
-        return ($plan['parallel_sessions_max_allowed'] - $plan['parallel_sessions_running']) +
-            ($plan['queued_sessions_max_allowed'] - $plan['queued_sessions']);
+        return $plan['parallel_sessions_max_allowed'] - $plan['parallel_sessions_running'];
     }
 
     /**

@@ -148,7 +148,7 @@ class Tunnel
         $this->getProcess()->start();
 
         // there is no reliable way of testing when BrowserStackLocal becomes active
-        sleep(10);
+        sleep(5);
 
         return $this;
     }

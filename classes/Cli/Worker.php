@@ -103,7 +103,7 @@ class Worker extends Command
                 // wait for page load indicated by the presence of a #bst_reporter element
                 // if page load times out, or an error page is loaded, continue with the next address
                 try {
-                    $driver->wait($pageTimeout)->until(WebDriverExpectedCondition::presenceOfElementLocated(
+                    $driver->wait($pageTimeout, 2000)->until(WebDriverExpectedCondition::presenceOfElementLocated(
                         WebDriverBy::id('bst_reporter')
                     ));
 
